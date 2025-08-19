@@ -23,18 +23,19 @@ bool cmd_exec_vargs(const char *program, ...) {
 #define streq(a, b) (strcmp(a, b) == 0)
 
 #define BUILD_FOLDER "./build"
+#define EXAMPLES_FOLDER "./examples"
 
 #define PIXELS_HEADER_NAME "pixels.h"
 #define PIXELS_HEADER_PATH "./"PIXELS_HEADER_NAME
 
 const char *simp_tri_input_paths[] = {
-  "./simp-triangle.c",
+  EXAMPLES_FOLDER"/simp-triangle.c",
   PIXELS_HEADER_PATH,
 };
 const char *simp_tri_output_name = "simp-tri";
 
 const char *cube_input_paths[] = {
-  "./cube.c",
+  EXAMPLES_FOLDER"/cube.c",
   PIXELS_HEADER_PATH,
 };
 const char *cube_output_name = "cube";
@@ -50,6 +51,20 @@ typedef struct {
 
 #define cube_config(...) ((Build_Config) { .output_name = cube_output_name, .input_paths = cube_input_paths, .inputs_count = NOB_ARRAY_LEN(cube_input_paths), __VA_ARGS__ })
 
+bool build(Cmd *cmd, Build_Config *cfg, const char *output_path) {
+  nob_cc(cmd);
+  nob_cc_flags(cmd);
+  cmd_append(cmd, "-I.");
+  cmd_append(cmd, "-lm");
+  nob_cc_output(cmd, output_path);
+  for (size_t i = 0; i < cfg->inputs_count; ++i) {
+    nob_cc_inputs(cmd, cfg->input_paths[i]);
+  }
+
+  return cmd_rsr(cmd);
+}
+
+
 bool check_build(Cmd *cmd, Build_Config *cfg) {
   bool built = false;
   bool result = true;
@@ -58,15 +73,7 @@ bool check_build(Cmd *cmd, Build_Config *cfg) {
   
   if (needs_rebuild(output_path, cfg->input_paths, cfg->inputs_count)) {
     nob_log(INFO, "%s requires update", cfg->output_name);
-    nob_cc(cmd);
-    nob_cc_flags(cmd);
-    cmd_append(cmd, "-lm");
-    nob_cc_output(cmd, output_path);
-    for (size_t i = 0; i < cfg->inputs_count; ++i) {
-      nob_cc_inputs(cmd, cfg->input_paths[i]);
-    }
-
-    result = cmd_rsr(cmd);
+    result = build(cmd, cfg, output_path);
     built = true;
   } else {
     nob_log(INFO, "%s is up to date", cfg->output_name);
@@ -75,16 +82,7 @@ bool check_build(Cmd *cmd, Build_Config *cfg) {
 
   if (!built && cfg->forced) {
     nob_log(INFO, "%s build demanded", cfg->output_name);
-    nob_cc(cmd);
-    nob_cc_flags(cmd);
-    cmd_append(cmd, "-lm");
-    nob_cc_output(cmd, output_path);
-    nob_log(INFO, "  Inputs count: %zu", cfg->inputs_count);
-    for (size_t i = 0; i < cfg->inputs_count; ++i) {
-      nob_cc_inputs(cmd, cfg->input_paths[i]);
-    }
-
-    result = cmd_rsr(cmd);
+    result = build(cmd, cfg, output_path);
   }
 
   if (result && cfg->run) {

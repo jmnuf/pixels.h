@@ -15,7 +15,7 @@
 
 #ifndef PIXELS_MALLOC
 #define PIXELS_MALLOC(x) malloc(x)
-#endig
+#endif
 
 typedef struct {
   unsigned char red, green, blue, alpha;
