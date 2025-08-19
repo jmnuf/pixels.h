@@ -7,5 +7,7 @@ Admittedly I wrote this without actually looking into the olive.c code, I just g
 
 Not really recommended to use this at all.
 
+![Color Triangle](./triangle.png)
 
+![Flat cube](./cube.png)
 
